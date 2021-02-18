@@ -1,0 +1,189 @@
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=no" />
+    <meta charset="utf-8">
+
+    <!-- The Viewer CSS -->
+    <link rel="stylesheet" href="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/style.min.css" type="text/css">
+
+    <!-- Developer CSS -->
+    <style>
+        body {
+            margin: 0;
+        }
+        
+        #MyConytainerDiv {
+            width: 100%;
+            height:100%;
+            position: relative;
+        }
+
+        #MyViewerDiv {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: #F0F8FF;
+        }
+		#source_link {
+		position: absolute;
+		left: 10px;
+		z-index: 10;
+		}
+    </style>
+    
+    <title>Showing A360 Shared files</title>
+</head>
+
+<body>
+
+    <!-- The Viewer will be instantiated here -->
+    <div id="MyConytainerDiv">
+	<p id = "source_link">link to source <a href="https://forge.autodesk.com/blog/dynamic-model-placement">https://forge.autodesk.com/blog/dynamic-model-placement</a></p>
+        <div id="MyViewerDiv"></div>
+    </div>
+    
+    <!-- The Viewer JS -->
+    <script src="https://developer.api.autodesk.com/modelderivative/v2/viewers/7.*/viewer3D.js"></script>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+
+    <!-- Developer JS -->
+    <script>
+    (function test() {
+        // this is the iframe URL that shows up when sharing a model embed on a page
+        var myRevitFile = 'https://myhub.autodesk360.com/ue29c89b7/shares/public/SH7f1edQT22b515c761e81af7c91890bcea5?mode=embed'; // Revit file 
+        var myDwfxFile = 'https://autodesk3743.autodesk360.com/shares/public/SH919a0QTf3c32634dcf03b8a55be243c021?mode=embed'; // Sports Car.dwfx
+
+        var viewer;
+
+        function getURN(embedURLfromA360, onURNCallback) {
+            $.get({
+                url: embedURLfromA360.replace('public', 'metadata').replace('mode=embed', ''),
+                dataType: 'json',
+                success: function (metadata) {
+                    if (onURNCallback) {
+                        let urn = btoa(metadata.success.body.urn).replace("/", "_").replace("=", "");
+                        onURNCallback(urn);
+                    }
+                }
+            })
+        }
+
+        function getForgeToken(onTokenCallback) {
+            $.post({
+                url: myRevitFile.replace('public', 'sign').replace('mode=embed', 'oauth2=true'),
+                data: '{}',
+                success: function (oauth) {
+                    if (onTokenCallback)
+                        onTokenCallback(oauth.accessToken, oauth.validitySeconds);
+                }
+            });
+        }
+
+        let options = {
+            env: 'AutodeskProduction',
+            getAccessToken: getForgeToken
+        };
+        
+        Autodesk.Viewing.Initializer(options, function onInitialized() {
+            var viewerDiv = document.getElementById('MyViewerDiv');
+            viewer = new Autodesk.Viewing.GuiViewer3D(viewerDiv);
+            viewer.start();
+
+            let mainModel = null;
+            let secondModel = null;
+            let extraZ = 0;
+
+            document.onkeydown = event => {
+                if (!event.shiftKey)
+                    return;
+
+                if (event.code === "ArrowRight") {
+                    let tr = secondModel.getPlacementTransform();
+                    tr.elements[12] += 1;
+                    secondModel.setPlacementTransform(tr);
+                }
+
+                if (event.code === "ArrowLeft") {
+                    let tr = secondModel.getPlacementTransform();
+                    tr.elements[12] -= 1;
+                    secondModel.setPlacementTransform(tr);
+                }
+            };
+
+            document.onmousemove = event => {
+                if (!event.ctrlKey)
+                    return;
+
+                let res = viewer.impl.hitTest(event.clientX, event.clientY, true, null, [mainModel.getModelId()]);
+                let pt = null;
+                
+                if (res) {
+                    pt = res.intersectPoint;
+                } else {
+                    pt = viewer.impl.intersectGround(event.clientX, event.clientY);
+                }
+                
+                let tr = secondModel.getPlacementTransform();
+                tr.elements[12] = pt.x;
+                tr.elements[13] = pt.y;
+                tr.elements[14] = pt.z + extraZ;
+                secondModel.setPlacementTransform(tr);
+                viewer.impl.invalidate(true, true, true);
+            }
+
+            getURN(myRevitFile, function (urn) {
+                let options = {
+                    env: 'AutodeskProduction',
+                    getAccessToken: getForgeToken
+                };
+                let documentId = 'urn:' + urn;
+                
+                Autodesk.Viewing.Document.load(documentId, (doc) => {
+                    let items = doc.getRoot().search({
+                        'type': 'geometry',
+                        'role': '3d'
+                    }, true);
+                    if (items.length === 0) {
+                        console.error('Document contains no viewables.');
+                        return;
+                    }
+
+                    viewer.loadDocumentNode(doc, items[0], {}).then(function (model1) {
+                        mainModel = model1;
+//                        getURN(myDwfxFile, function (urn) {
+//                           let documentId = 'urn:' + urn;
+//                            
+//                            Autodesk.Viewing.Document.load(documentId, (doc) => {
+//                                let items = doc.getRoot().search({
+//                                    'type': 'geometry',
+//                                    'role': '3d'
+//                                }, true);
+//                                if (items.length === 0) {
+//                                    console.error('Document contains no viewables.');
+//                                    return;
+//                                }
+//
+//                                let tr = new THREE.Matrix4();
+//                                tr.set(
+//                                    0, 0, .005, 0,
+//                                    .005, 0, 0, 0,
+//                                    0, .005, 0, 0,  
+//                                    0, 0, 0, 1
+//                                );
+//                                viewer.loadDocumentNode(doc, items[0], {keepCurrentModels: true, placementTransform: tr}).then(function (model2) {
+//                                    secondModel = model2;
+//                                    let bb = secondModel.getBoundingBox();
+//                                    extraZ = bb.max.z;
+//                                });
+//                            });
+//                        });
+                    });
+                }); 
+            });
+        });
+    })(); 
+    </script>
+</body>
+</html>
