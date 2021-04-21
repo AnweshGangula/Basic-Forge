@@ -38,7 +38,8 @@
 
     <!-- The Viewer will be instantiated here -->
     <div id="MyConytainerDiv">
-	<p id = "source_link">link to source <a href="https://forge.autodesk.com/blog/dynamic-model-placement">https://forge.autodesk.com/blog/dynamic-model-placement</a></p>
+	<p id = "source_link">link to source <a href="https://forge.autodesk.com/blog/dynamic-model-placement">https://forge.autodesk.com/blog/dynamic-model-placement</a> <br>
+    <a href="https://forge.autodesk.com/blog/publicly-share-models-customized-viewer">https://forge.autodesk.com/blog/publicly-share-models-customized-viewer</a></p>
         <div id="MyViewerDiv"></div>
     </div>
     
@@ -52,7 +53,11 @@
     <script>
     (function test() {
         // this is the iframe URL that shows up when sharing a model embed on a page
-        var myRevitFile = 'https://myhub.autodesk360.com/ue29c89b7/shares/public/SH7f1edQT22b515c761e81af7c91890bcea5?mode=embed'; // Revit file 
+        // existing URL working: https://myhub.autodesk360.com/ue29c89b7/shares/public/SH7f1edQT22b515c761e81af7c91890bcea5?mode=embed
+        // my personal URL1: https://myhub.autodesk360.com/ue2970ee2/shares/public/SH919a0QTf3c32634dcf7d90e49034aabd19?mode=embed
+        // my personal URL2: https://myhub.autodesk360.com/ue2970ee2/shares/public/SH919a0QTf3c32634dcfdcc5fc3b86f462e1?mode=embed
+        // my DPR URL working: https://mydpr8.autodesk360.com/shares/public/SH919a0QTf3c32634dcf99111d10a2db451d?mode=embed
+        var myRevitFile = 'https://myhub.autodesk360.com/ue2970ee2/shares/public/SH919a0QTf3c32634dcf7d90e49034aabd19?mode=embed'; // Revit file 
         var myDwfxFile = 'https://autodesk3743.autodesk360.com/shares/public/SH919a0QTf3c32634dcf03b8a55be243c021?mode=embed'; // Sports Car.dwfx
 
         var viewer;
