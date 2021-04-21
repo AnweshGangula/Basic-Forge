@@ -93,7 +93,7 @@
         
         Autodesk.Viewing.Initializer(options, function onInitialized() {
             var viewerDiv = document.getElementById('MyViewerDiv');
-            viewer = new Autodesk.Viewing.GuiViewer3D(viewerDiv);
+            viewer = new Autodesk.Viewing.GuiViewer3D(viewerDiv, { extensions: ['Autodesk.VisualClusters', 'Autodesk.DocumentBrowser'] });
             viewer.start();
 
             let mainModel = null;
