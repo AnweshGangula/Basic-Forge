@@ -1,5 +1,5 @@
 # Basic-Forge
-This is the most basic fore viewer code (under 130 lines of code) to view a model without the need of any server-side code.
+This is the most basic fore viewer code (under 135 lines of code) to view a model without the need of any server-side code.
 
 Referred from the [following blogpost](https://forge.autodesk.com/blog/publicly-share-models-customized-viewer).
 
